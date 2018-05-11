@@ -1,0 +1,308 @@
+{
+    "VOL_5DAYS": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "beta"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "vol_5days": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "系统风险因子：近100周的BETA值（BETA_100W）",
+        "last update": "2018-03-12 15:46:21",
+        "level": 0,
+        "name": "贝塔"
+    },
+    "BETA": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "beta"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "BETA_100W": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "系统风险因子：近100周的BETA值（BETA_100W）",
+        "last update": "2018-03-12 15:46:21",
+        "level": 0,
+        "name": "贝塔"
+    },
+    "CURRENT": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "current"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "CURRENT": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "短期偿债因子：流动比率（CURRENT）",
+        "last update": "2018-03-12 15:48:30",
+        "level": 0,
+        "name": "流动资产"
+    },
+    "DEBTTOASSETS": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "debttoassets"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "DEBTTOASSETS": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "长期偿债因子：资产负债率（DEBTTOASSETS）的对数，取对数之后分布较好",
+        "last update": "2018-03-12 15:50:37",
+        "level": 0,
+        "name": "资产负债率"
+    },
+    "EBITOFREVENUE": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "profit_ebit"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "EBIT2_TTM": [
+                    0
+                ],
+                "OR_TTM2": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "盈利因子(EBIT)：息税前利润（EBIT2_TTM）/ 营业收入（OR_TTM2）",
+        "last update": "2018-03-12 15:52:45",
+        "level": 0,
+        "name": "EBIT收入比"
+    },
+    "GROWTH": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "growth"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "OR_TTM2": [
+                    0,
+                    1
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "成长因子：营业收入（OR_TTM2）环比增长率",
+        "last update": "2018-03-14 13:18:12",
+        "level": 0,
+        "name": "营业收入同比增长率"
+    },
+    "LEVERAGE": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "leverage"
+        ],
+        "context": {
+            "factors": {
+                "CURRENT": [
+                    0
+                ],
+                "DEBTTOASSETS": [
+                    0
+                ]
+            },
+            "indexes": {}
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "杠杆因子：短期偿债因子（CURRENT）和长期偿债因子（DEBTTOASSETS）的加权平均",
+        "last update": "2018-03-12 15:56:58",
+        "level": [
+            0
+        ],
+        "name": "杠杆因子"
+    },
+    "LIQ": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "liq"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "AVG_TURN_ND": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "流动性因子：近20个交易日的换手率（AVG_TURN_ND）的对数",
+        "last update": "2018-03-12 15:58:55",
+        "level": 0,
+        "name": "流动性因子"
+    },
+    "MOM": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "mom"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "ANNUALYEILD_100W": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "动量因子：近100周的年化收益率（ANNUALYEILD_100W）",
+        "last update": "2018-03-12 16:00:41",
+        "level": 0,
+        "name": "趋势"
+    },
+    "PROFIT": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "profit_all"
+        ],
+        "context": {
+            "factors": {
+                "EBITOFREVENUE": [
+                    0
+                ],
+                "ROE": 1
+            },
+            "indexes": {}
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "盈利因子(综合)：盈利因子(ROE) 和 盈利因子(EBIT) 的加权平均",
+        "last update": "2018-03-12 16:08:12",
+        "level": [
+            0
+        ],
+        "name": "盈利因子(综合)"
+    },
+    "ROE": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "profit_roe"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "ROE_TTM3": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "盈利因子(ROE)：ROE_TTM3",
+        "last update": "2018-03-12 16:06:05",
+        "level": 0,
+        "name": "盈利(ROE)"
+    },
+    "SIZE": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "size"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "MKT_CAP_FLOAT": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "规模因子：流通市值（MKT_CAP_FLOAT）的对数",
+        "last update": "2018-03-12 16:09:42",
+        "level": 0,
+        "name": "规模因子"
+    },
+    "VALUE": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "value"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "PB_LF": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "价值因子：市净率（PB_LF）的倒数",
+        "last update": "2018-03-12 16:12:10",
+        "level": 0,
+        "name": "价值因子"
+    },
+    "VOL": {
+        "begin date": "2014-01-02",
+        "col_names": [
+            "sec_id",
+            "vol"
+        ],
+        "context": {
+            "factors": {},
+            "indexes": {
+                "ANNUALSTDEVR_100W": [
+                    0
+                ]
+            }
+        },
+        "end date": "2018-03-02",
+        "end update": "2018-01-12",
+        "explanation": "波动性因子：近100周的年化波动率（ANNUALSTDEVR_100W）",
+        "last update": "2018-03-12 16:13:37",
+        "level": 0,
+        "name": "波动率"
+    }
+}

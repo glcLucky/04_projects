@@ -1,0 +1,17 @@
+{
+    "vol_5days": {
+        "begin date": "2010-01-04",
+        "carrier": "db",
+        "col_names": [
+            "date",
+            "sec_id",
+            "vol_5days"
+        ],
+        "end date": "2018-03-01",
+        "explanation": "过去5个交易日波动率",
+        "kwargs": {},
+        "last update": "2018-03-19 22:56:47",
+        "type": "时间序列"
+    }
+
+}

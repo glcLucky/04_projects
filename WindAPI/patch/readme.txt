@@ -1,0 +1,1 @@
+将WindPy.py更新到~/Wind/x64中覆盖源文件
