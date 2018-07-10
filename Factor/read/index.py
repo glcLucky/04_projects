@@ -169,3 +169,29 @@ def get_secs_multiple_index_stds(index_stds=[], sec_ids=[], trading_days=[], log
         del a
         gc.collect()
     return output
+
+
+def get_secs_multiple_indexs(indexs=[], sec_ids=[], trading_days=[], log=False):
+    """
+    从本地数据库中获取一段日期的多index_std的值，并返回 DataFrame
+    @indexs (list): 多个index_std
+    @sec_ids (list): 支持多个股票查询，默认为[]，表示查询范围是全A股
+    @trading_days (["%Y-%m-%d"]): 日期列表
+    @log (Bool): 是否打印log
+    :return: {date: Dataframe}，其中 DataFrame 列为index_std名，index_std为sec_id
+    """
+
+    if len(indexs) == 0:
+        indexs = get_tables_on_given_database(USER, PASSWORD, 'index')
+    output = pd.DataFrame()
+    for index in indexs:
+        a = get_secs_index(index, sec_ids, trading_days, log)
+        a = a[['date', 'sec_id', index]]
+        if len(output) == 0:
+            output = a.copy()
+        else:
+            output = output.merge(a, how='outer', on=['date', 'sec_id'])
+        del a
+        gc.collect()
+    return output
+

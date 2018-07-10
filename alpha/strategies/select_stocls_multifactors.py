@@ -19,16 +19,16 @@ from Factor.config.path import PROJECT_FILES_PATH
 from Factor.read import get_secs_index_std
 
 
-def mfs_by_score(date, windows, num):
+def mfs_by_score(date, windows_step1, num1):
     """
     打分法多因子选股: 给定指定日期，计算当天因子打分情况 返回选定股票
     @date <"%Y-%m-%d">: 开始建仓日期
-    @windows <int>: 计算因子权重的滚动窗口 即根据近多少个交易日进行分组有效性检验
-    @num <int>: 持仓股票数
+    @windows_step1 <int>: 计算因子权重的滚动窗口 即根据近多少个交易日进行分组有效性检验
+    @num1 <int>: 持仓股票数
     @return 选择的股票 
     """
 
-    index_info = dk.json2dict(os.path.join(PROJECT_FILES_PATH, "factor_weight", "cycle{}".format(str(windows)), "{}.json".format(date)))
+    index_info = dk.json2dict(os.path.join(PROJECT_FILES_PATH, "factor_weight", "cycle{}".format(str(windows_step1)), "{}.json".format(date)))
     index_std_all = pd.DataFrame()
     weight = {key: index_info[key]['weight'] for key in index_info}  # 有效因子权重
     monotony = {key: index_info[key]['ascending'] for key in index_info}  # 因子单调方向  
@@ -49,5 +49,5 @@ def mfs_by_score(date, windows, num):
     # 获取不同因子的加权排名
     for col in index_std_all1.columns:
         index_std_all2[col] = index_std_all2[col] * weight[col]
-    selected_stocks = index_std_all2.sum(axis=1).sort_values().index[:num].tolist()  # 选出排名前20的股票
+    selected_stocks = index_std_all2.sum(axis=1).sort_values().index[:num1].tolist()  # 选出排名前20的股票
     return selected_stocks

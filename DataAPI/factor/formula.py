@@ -16,10 +16,26 @@ import numpy as np
 def calculate_raw_BETA(context):
     return context.rename(columns={"BETA_100W": "BETA"})
 
+def calculate_raw_DIVIDENDYIELD2(context):
+    return context
+
+def calculate_raw_EV2_TO_EBITDA(context):
+    return context
+
+def calculate_raw_PB_LF(context):
+    return context
+
+def calculate_raw_PCF_OCF_TTM(context):
+    return context
+
+def calculate_raw_PS_TTM(context):
+    return context
+
+def calculate_raw_VAL_PE_DEDUCTED_TTM(context):
+    return context
 
 def calculate_raw_CURRENT(context):
     return context
-
 
 def calculate_raw_DEBTTOASSETS(context):
     context["DEBTTOASSETS"] = context["DEBTTOASSETS"].apply(lambda x: np.log(x) if x > 0. else x)

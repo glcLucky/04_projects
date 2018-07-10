@@ -83,7 +83,7 @@ def update_single_factor(factor, trading_days=[], override=False, log=False):
                     traceback.print_exc()
                     continue
 
-                if df is not None:  # 从Wind下载数据成功时
+                if df is not None:  # 成功取得indicator
                     if date in lookup and override:  # 覆盖时删除原记录
                         proxy.execute("DELETE FROM [{}] WHERE date = '{}'".format(factor, date))
 

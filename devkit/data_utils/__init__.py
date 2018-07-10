@@ -17,6 +17,13 @@ from . file_utils import (
 
 from . datetime_utils import (
     char2datetime,
+    timedelta,
+    date2char,
+    get_available_report_day,
+)
+
+from . preprocessing import (
+    winsorize,
 )
 
 __all__ = [
@@ -26,4 +33,9 @@ __all__ = [
     "listdir_advanced",
 
     "char2datetime",
+    "timedelta",
+    "date2char",
+    "get_available_report_day",
+
+    "winsorize",
 ]

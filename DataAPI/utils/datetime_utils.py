@@ -35,22 +35,21 @@ def get_previous_report_day(date):
     :return:str,%Y-%m-%d 返回给定日期下上一个季末的日期
     """
 
-    if date[5:] in ['03-31', '06-30', '09-30', '12-31']:
-        return date
+    date_tm = datetime.strptime(date, "%Y-%m-%d")
+    if 1 <= date_tm.month <= 4:
+        date_tm = datetime(date_tm.year - 1, 9, 30).date()
+    elif 5 <= date_tm.month <= 7:
+        date_tm = datetime(date_tm.year - 1, 12, 31).date()
+    elif 8 <= date_tm.month <= 9:
+        date_tm = datetime(date_tm.year, 3, 31).date()
+    elif date_tm.month == 10:
+        date_tm = datetime(date_tm.year, 6, 30).date()
+    elif 11 <= date_tm.month <= 12:
+        date_tm = datetime(date_tm.year, 9, 30).date()
     else:
-        date_tm = datetime.strptime(date, "%Y-%m-%d")
-        if date_tm.month <= 3:
-            month = 1
-        elif date_tm.month <= 6:
-            month = 4
-        elif date_tm.month <= 9:
-            month = 7
-        else:
-            month = 10
-        first = Date(year=date_tm.year, month=month, day=1)
-        lastmonth = first - timedelta(days=1)
-        output = datetime.strftime(lastmonth, "%Y-%m-%d")
-        return output
+        print("Invalid date!!")
+    output = datetime.strftime(date_tm, "%Y-%m-%d")
+    return output
 
 
 def get_previous_existed_day_in_table(date, db_path, table_name):
@@ -84,7 +83,7 @@ def get_previous_existed_day_in_table(date, db_path, table_name):
             output = df.at[0, 'date']
             if output:
                 break
-        year = str(int(year)-1)
+        year = str(int(year) - 1)
 
     return output
 

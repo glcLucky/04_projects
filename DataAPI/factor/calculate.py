@@ -67,15 +67,12 @@ INDICATOR_SCHEMA = get_schema("indicator")
 def load_context(factor, date):
     schema = get_schema("factor")[factor]
     varlist = schema['context']
-
     universe = get_index_contents("A", date, False)
     if universe is None:
         Logger.error("Fail to fetch stock lists in following dates: {}".format(date))
         raise ValueError
-
     df_today = pd.DataFrame(universe, columns=['sec_id'])  # 获取当天全A股列表
     last_report_day = get_previous_report_day(date)  # 供可能的indicator使用
-
     context = df_today.copy()
     missing_flag = 0  # 缺失过度标志
     for indicator, lags in varlist["indicators"].items():
@@ -102,7 +99,6 @@ def load_context(factor, date):
                 break
             ind_date = ''
             df_context = None
-
         if missing_flag == 1:
             break
 
@@ -142,12 +138,10 @@ def calculate_factor(factor, date):
     :param: date (%Y-%m-%d): 日期
     :return: dataframe 处理后的因子值
     """
-
     func = getattr(formula, "calculate_raw_{}".format(factor))
     if func is None:
         Logger.error("Formula not implemented: {}".format(factor))
         raise ValueError
-
     context, df_today, missing_flag = load_context(factor, date)
     last_day = get_previous_existed_day_in_table(date, DB_FACTOR, factor)
     if missing_flag == 1:

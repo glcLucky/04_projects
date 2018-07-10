@@ -10,10 +10,4 @@ api.py
 @date: 2017.01.10
 """
 
-from . classification import (
-    fit_LR,
-)
-
-__all__ = [
-    "fit_LR",
-]
+from . classification import *

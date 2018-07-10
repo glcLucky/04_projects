@@ -14,6 +14,7 @@ from . index import (
     get_secs_index,
     get_secs_index_std,
     get_secs_multiple_index_stds,
+    get_secs_multiple_indexs,
 )
 
 from . index_contents import(
@@ -25,6 +26,7 @@ __all__ = [
     "get_secs_index",
     "get_secs_index_std",
     "get_secs_multiple_index_stds",
+    "get_secs_multiple_indexs",
 
     "get_secs_IC",
 ]

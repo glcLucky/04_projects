@@ -51,7 +51,7 @@ def get_tables_on_given_database(user, password, db_name):
     @db_name
     """
     conn = MySQLProxy()
-    conn.connect('root', '123888', 'index_std')
+    conn.connect('root', '123888', db_name)
     query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '{}'".format(db_name)
     output = conn.query_as_dataframe(query)['table_name'].tolist()
     return output
@@ -160,7 +160,8 @@ class MySQLProxy:
     @property
     def list_tables(self):
         self.cursor.execute("show tables;")
-        return self.cursor.fetchall()
+        a = self.cursor.fetchall()
+        return [a[i][0] for i in range(len(a))]
 
     def list_vars(self, table):
         self.cursor.execute("DESCRIBE {};".format(table))
