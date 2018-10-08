@@ -5,7 +5,7 @@ read
 
 读数据库相关函数
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.12.11
 """
@@ -16,6 +16,15 @@ from . import (
     indicator,
     factor,
     factor_return,
+    calendar,
+)
+
+from . calendar import (
+    get_report_days,
+    get_trading_days,
+    get_monthly_last_trading_days,
+    get_weekly_last_trading_days,
+    get_weekly_and_monthly_last_trading_days,
 )
 
 from . index_contents import (
@@ -49,6 +58,12 @@ from . factor_return import (
 
 
 __all__ = [
+    "get_report_days",
+    "get_trading_days",
+    "get_monthly_last_trading_days",
+    "get_weekly_last_trading_days",
+    "get_weekly_and_monthly_last_trading_days",
+
     "get_index_contents",
     "get_index_contents_on_multidays",
     "get_index_weights",

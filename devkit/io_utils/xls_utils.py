@@ -5,8 +5,8 @@ xls_utils.py
 
 与excel相关的IO函数库
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.04.24
 
 ---------------

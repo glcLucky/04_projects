@@ -5,7 +5,7 @@ wind_api.py
 
 根据自己的需求创建的特殊API
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.01.10
 """
@@ -29,8 +29,11 @@ def get_trading_days(start_date, end_date):
 
 
 def get_sector_contents(date, sector_code="a001010100000000"):
-    # 全A股：a001010100000000
-
+    """
+    获取板块成分股 全A股：a001010100000000
+    @date <%Y-%m-%d>: 日期
+    @sector_code <str>: 板块代码
+    """
     options = {"date": date,
                "sectorid": sector_code}
     response = WDServer.wset(tablename="sectorconstituent", options=options2str(options))
@@ -41,13 +44,18 @@ def get_sector_contents(date, sector_code="a001010100000000"):
 
 
 def get_index_contents(date, index_code="000300.SH"):
+    """
+    获取指数成分股 hs300： 000300.SH
+    @date <%Y-%m-%d>: 日期
+    @index_code <str>: 指数万得代码
+    """
     options = {"date": date,
                "windcode": index_code}
     response = WDServer.wset(tablename="indexconstituent", options=options2str(options))
     test_error(response)
-    output = {"股票代码": response.Data[1],
-              "股票名称": response.Data[2],
-              "股票权重": [x/100 if x is not None else 0. for x in response.Data[3]]}
+    output = {"sec_id": response.Data[1],
+              "sec_name": response.Data[2],
+              "sec_weight": [x/100 if x is not None else 0. for x in response.Data[3]]}
     return pd.DataFrame(output)
 
 

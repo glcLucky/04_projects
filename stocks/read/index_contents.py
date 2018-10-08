@@ -5,8 +5,8 @@ index_contents.py
 
 读取指数成分股的API
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.13
 
 -------------------

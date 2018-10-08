@@ -4,8 +4,8 @@
 factor.py
 写入因子原始数据
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.29
 
 -------------------

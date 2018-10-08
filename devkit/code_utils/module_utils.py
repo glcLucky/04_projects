@@ -5,8 +5,8 @@ module_utils.py
 
 与单个module代码有关的工具函数库
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.13
 
 ---------------

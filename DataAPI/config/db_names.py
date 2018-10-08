@@ -5,8 +5,8 @@ db_names.py
 
 数据库名称
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.02.26
 """
 
@@ -16,4 +16,5 @@ DB_NAMES = [
     "indicator",
     "factor",
     "factor_return",
+    "calendar",
 ]

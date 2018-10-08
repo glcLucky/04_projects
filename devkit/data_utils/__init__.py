@@ -20,6 +20,7 @@ from . datetime_utils import (
     timedelta,
     date2char,
     get_available_report_day,
+    date2week,
 )
 
 from . preprocessing import (
@@ -36,6 +37,7 @@ __all__ = [
     "timedelta",
     "date2char",
     "get_available_report_day",
+    "date2week",
 
     "winsorize",
 ]

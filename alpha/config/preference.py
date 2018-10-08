@@ -8,3 +8,4 @@
 
 USER = 'root'
 PASSWORD = '123888'
+DB_PATH = r"E:\07_data\05_mfs_data"

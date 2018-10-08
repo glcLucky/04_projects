@@ -5,8 +5,8 @@ DataAPI
 
 自用数据库管理工具
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 
 ---
 

@@ -5,7 +5,7 @@ wind_industry_apis.py
 
 根据自己的需求创建的特殊API
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.01.10
 

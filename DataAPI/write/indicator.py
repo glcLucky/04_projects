@@ -19,10 +19,9 @@ import os
 import traceback
 
 from devkit.api import SqliteProxy, json2dict, Logger
-from finkit.api import get_trading_days, get_report_days
 
 from .. config import DB_PATH_LIB
-from .. read import get_secs_indicator
+from .. read import get_secs_indicator, get_trading_days, get_report_days
 from .. load import load_single_indicator_on_single_day_from_wind
 from .. schema import get_schema, update_schema
 from .. utils import classify_dates_by_year, create_table
@@ -30,11 +29,12 @@ from .. utils import classify_dates_by_year, create_table
 DB_INDICATOR = DB_PATH_LIB["indicator"]
 
 
-def update_single_indicator(indicator, trading_days=[], override=False, log=False):
+def update_single_indicator(indicator, sec_ids=[], trading_days=[], override=False, log=False):
     """
     更新单个indicator的指定日期列表的数据
 
     @indicator (str): 单个indicator的名称
+    @sec_ids<list> : 股票代码列表
     @trading_days ([%Y-%m-%d]): 日期列表
     @override (Bool): 是否覆盖原记录 默认为False 表示不覆盖
     @log (Bool): 是否打印log
@@ -76,15 +76,19 @@ def update_single_indicator(indicator, trading_days=[], override=False, log=Fals
                     continue
 
                 try:
-                    df = load_single_indicator_on_single_day_from_wind(indicator=indicator, date=date)
+                    df = load_single_indicator_on_single_day_from_wind(indicator=indicator, sec_ids=sec_ids, date=date)
                 except Exception:
                     Logger.error("Error occurred when loading {} on {}".format(indicator, date))
                     raise ValueError
 
                 if df is not None:  # 从Wind下载数据成功时
                     if date in lookup and override:  # 覆盖时删除原记录
-                        proxy.execute("DELETE FROM [{}] WHERE date = '{}'".format(indicator, date))
-
+                        if len(sec_ids) == 0:
+                            proxy.execute("DELETE FROM [{}] WHERE date = '{}'".format(indicator, date))
+                        if len(sec_ids) == 1:
+                            proxy.execute("DELETE FROM [{}] WHERE date = '{}' and sec_id = '{}'".format(indicator, date, sec_ids[0]))
+                        else:
+                            proxy.execute("DELETE FROM [{}] WHERE date = '{}' and sec_id in {}".format(indicator, date, tuple(sec_ids)))
                     df['date'] = date
                     try:
                         proxy.write_from_dataframe(df, indicator)
@@ -106,7 +110,7 @@ def update_single_indicator(indicator, trading_days=[], override=False, log=Fals
         Logger.info("------------------------------------------")
 
 
-def update_indicators(indicators=[], trading_days=[], override=False, log=False):
+def update_indicators(indicators=[], trading_days=[], sec_ids=[], override=False, log=False):
     """
     更新多个indicator的指定日期列表的数据
 
@@ -136,6 +140,6 @@ def update_indicators(indicators=[], trading_days=[], override=False, log=False)
             if not update_days:
                 Logger.warn("No valid days to update!")
             else:
-                update_single_indicator(indicator=ind, trading_days=update_days, override=override, log=log)
+                update_single_indicator(indicator=ind, trading_days=update_days, sec_ids=sec_ids, override=override, log=log)
         else:
             Logger.error("Unrecognized indicator: {}".format(ind))

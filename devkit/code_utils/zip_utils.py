@@ -5,8 +5,8 @@ zip_utils.py
 
 与代码打包和解包有关的工具函数库
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.13
 
 ---------------

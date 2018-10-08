@@ -5,8 +5,8 @@ write
 
 写数据库相关函数
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.11
 """
 
@@ -16,6 +16,11 @@ from . import (
     industry,
     factor,
     factor_return,
+    calendar,
+)
+
+from . calendar import (
+    update_calendar,
 )
 
 from . index_contents import (

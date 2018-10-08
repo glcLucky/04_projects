@@ -5,8 +5,8 @@ indicator.py
 
 下载指标原始数据
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.19
 
 -------------------
@@ -27,10 +27,10 @@ from .. read.index_contents import get_index_contents
 SCHEMA = get_schema("indicator")
 
 
-def load_single_indicator_on_single_day_from_wind(indicator, date, log=False):
+def load_single_indicator_on_single_day_from_wind(indicator, sec_ids, date, log=False):
     """
     从wind上下载某个指定日期的指标
-
+    @sec_ids<list> : 股票代码列表
     @indicator (str): 指标名称,仅支持单个indicator传递
     @date ("%Y-%m-%d): 单个日期
     return: DataFrame，columns=['sec_id','indicator_name']
@@ -40,26 +40,29 @@ def load_single_indicator_on_single_day_from_wind(indicator, date, log=False):
 
     schema = SCHEMA[indicator]
     options = schema['kwargs']
+    if len(sec_ids) != 0:  # 为空表示全A股
+        universe = sec_ids
     if schema["type"] == "时间序列":
-        universe = get_index_contents(index_code="A", date=date, log=log)
-        if universe is None:
-            Logger.error("Fail to fetch stock lists on {}".format(date))
-            raise ValueError
+        if len(sec_ids) == 0:
+            universe = get_index_contents(index_code="A", date=date, log=log)
+            if universe is None:
+                Logger.error("Fail to fetch stock lists on {}".format(date))
+                raise ValueError
         options["tradeDate"] = date.replace("-", "")
     elif schema["type"] == "财报数据":
         # approx参数为True，保证财报日为非交易日的情形
-        universe = get_index_contents(index_code="A", date=date, approx=True, log=log)
-        if universe is None:
-            Logger.error("Fail to fetch stock lists on: {}".format(date))
-            raise ValueError
+        if len(sec_ids) == 0:
+            universe = get_index_contents(index_code="A", date=date, approx=True, log=log)
+            if universe is None:
+                Logger.error("Fail to fetch stock lists on: {}".format(date))
+                raise ValueError
         options["rptDate"] = date.replace("-", "")
     else:
         Logger.error("Unrecognized indicator type: {}".format(schema["type"]))
         raise ValueError
-
     response = WDServer.wss(
         codes=",".join(universe),
-        fields=indicator,
+        fields=SCHEMA[indicator]['field'],
         options=options2str(options)
     )
     WindAPI.test_error(response)

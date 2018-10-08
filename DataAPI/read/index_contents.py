@@ -5,8 +5,8 @@ index_contents.py
 
 读取指数成分股的API
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.13
 
 -------------------
@@ -240,3 +240,5 @@ def get_index_weights(index_code, date=""):
             output = {df.at[i, 'sec_id']: df.at[i, 'weight'] for i in range(len(df))}
 
         return output
+
+

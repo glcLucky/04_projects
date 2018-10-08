@@ -5,8 +5,8 @@ indicator.py
 
 indicator相关的API
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.08
 
 -------------------
@@ -61,7 +61,6 @@ def get_secs_indicator(indicator, sec_ids=[], date='', log=False):
 
     if len(sec_ids) == 0: 
         sec_ids = get_index_contents("A", date, False)
-
     with SqliteProxy(log=log) as proxy:
         path = os.path.join(DB_INDICATOR_PATH, '{}.db'.format(date[:4]))
         proxy.connect(path)
@@ -89,9 +88,8 @@ def get_secs_indicator_on_multidays(indicator, sec_ids=[], trading_days=[], log=
     @sec_ids (list): 支持多个股票查询，默认为[]，表示查询范围是全A股
     @trading_days (["%Y-%m-%d"]): 日期列表
     @log (Bool): 是否打印log
-    :return: {date: Dataframe}，其中 DataFrame 列为indicator名，index为sec_id
+    :return: DataFrame 列为date indicator名，index为sec_id
     """
-
     if log:
         Logger.info("Reading {} from {} to {}".format(indicator, trading_days[0], trading_days[-1]), "green")
 
@@ -128,8 +126,15 @@ def get_secs_indicator_on_multidays(indicator, sec_ids=[], trading_days=[], log=
                     raise ValueError
 
                 output[date] = df
+    df_output = pd.DataFrame()
+    for date in output:
+        output[date]['date'] = date
+        if len(df_output) == 0:
+            df_output = output[date]
+        else:
+            df_output = df_output.append(output[date])
 
-    return output
+    return df_output
 
 
 def get_adjusted_close_price(sec_ids=[], date=""):

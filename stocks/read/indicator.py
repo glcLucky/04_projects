@@ -5,8 +5,8 @@ indicator.py
 
 indicator相关的API
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.08
 
 -------------------

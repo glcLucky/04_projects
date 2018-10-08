@@ -5,7 +5,7 @@ load
 
 从数据源载入数据
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.12.11
 """
@@ -16,6 +16,11 @@ from . import (
     industry,
     factor,
     factor_return,
+    calendar,
+)
+
+from . calendar import (
+    load_calendar_from_wind,
 )
 
 from . index_contents import (
@@ -42,6 +47,7 @@ from . factor_return import (
 
 
 __all__ = [
+    "load_calendar_from_wind",
     "load_index_contents_from_wind",
     "load_index_contents_and_weights_from_wind",
     "load_single_indicator_on_single_day_from_wind",

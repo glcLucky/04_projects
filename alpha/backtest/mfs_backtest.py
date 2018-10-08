@@ -11,173 +11,199 @@ mfs_backtest.py
 
 import pandas as pd
 import numpy as np
-from Factor.read import (
-    get_secs_index,
-)
+import os
+
 import finkit.api as fk
 import devkit.api as dk
+import matplotlib.pyplot as plt
+import DataAPI
+from .. config import DB_PATH
 
 
-def calculate_period_return(start, end, sec_id=[], price_type='close'):
+def derive_next_month_rr(sec_ids, start_date, end_date):
     """
-    @sec_id <list>: 股票列表
-    @price_type <str>: 价格类型 close open high low
+    获取给定股票列表在给定日期列表的下个月收益率
+    @sec_ids <list>: 股票列表
+    @start_date <"%Y-%m-%d">: 开始日期
+    @end_date <"%Y-%m-%d">: 结束日期
+    @return dataframe [sec_id yearmonth month_ret CLOSE]
     """
-    a = get_secs_index(index=price_type, sec_ids=sec_id, trading_days=[start])
-    a = a[['sec_id', price_type]].rename(columns={price_type: price_type + '_start'})
-    b = get_secs_index(index=price_type, sec_ids=sec_id, trading_days=[end])
-    b = b[['sec_id', price_type]].rename(columns={price_type: price_type + '_end'})
-    c = a.merge(b, on=['sec_id'])
-    d = c['{}_end'.format(price_type)].sum() / c['{}_start'.format(price_type)].sum() - 1
-    return d
+    # 取月初月末的交易日列表
+    tds = dk.json2dict(os.path.join(DB_PATH, r"datasets\pre\trading_days.json"))
+    tds = pd.DataFrame(tds, columns=['date'])
+    tds = tds[tds.date.between(start_date, end_date)]
+    tds['group'] = tds['date'].apply(lambda x: x[:7])
+    tds = tds.sort_values(['date'])
+    first = tds.groupby('group').head(1)
+    last = tds.groupby('group').tail(1)
+    tds = first.append(last)
+    tds = tds.sort_values('date')
+    # 获取月初月末交易日的收盘价
+    close = DataAPI.api.get_secs_indicator_on_multidays(indicator="CLOSE", trading_days=tds.date.tolist(), sec_ids=sec_ids)
+    close = close.sort_values(['sec_id', 'date'])
+    close['yearmonth'] = close['date'].apply(lambda x: x[:7])
+    # 获取月收益率
+    def cal_ret(x):
+        close_id = x.columns.tolist().index('CLOSE')
+        return x.iloc[-1, close_id] / x.iloc[0, close_id] - 1
+    df_target = close.groupby(['sec_id', 'yearmonth'], as_index=False).apply(lambda x: cal_ret(x))
+    df_target = df_target.reset_index().rename(columns={0: 'month_ret'})
+    # 只取每个月月初的收盘价
+    close = close.groupby(['sec_id', 'yearmonth'], as_index=False).apply(lambda x: x.head(1))
+    df_target = df_target.merge(close, how='inner', on=['sec_id', 'yearmonth'])
+    del df_target['date']
+    return df_target
 
 
-def stop_loss_or_profit(sec_ids, start_date, end_date, stoploss, stopprofit, price_type='close', log=False):
+def backtest_for_mfs(yearmonth, selected_sec_ids, benchmark, model_name, label_kind="label_A", override=False):
     """
-    在给定的有序交易日内第一天持仓给定股票 持有期间内 当损失或盈利大于阈值时卖出 到期间最后一天时 无论是否达到阈值全部清仓 获得此种策略下的综合收益率
-    @sec_id <list>: 股票代码列表
-    @start_date <'%Y-%m-%d'>: 开始日期
-    @end_date <'%Y-%m-%d'>: 结束日期
-    @stoploss <float>: 止损率 如=-0.1 即当浮亏率达到10%时卖出
-    @stopprofit <float>: 止盈率 如=0.1 即当浮盈率达到10%时卖出
-    @price_type <str>: 使用的价格类型 默认为收盘价
+    多因子选股回测框架
+    @yearmonth <"%Y-%m">: 年份和月份
+    @selected_sec_ids <list>: yearmonth: selected sec_ids
+    @benchmark <str>: 基准收益 目前支持 hs300 zz500 wind_ALL_A
+    @plot <bool>: 是否绘制累计收益图
+    @model_name <str>: 模型名称
+    @label_kind <str>: 标记获得方法
     """
-    trading_days = fk.get_trading_days(start_date, end_date)
-    trading_days = sorted(trading_days)
-    close = get_secs_index(price_type, sec_ids, trading_days)  # 获取收盘价信息
-    date_open = trading_days[0]  # 建仓日
-    date_close = trading_days[-1]  # 强制平仓日
-    cost_info = close[close.date == date_open]  # 建仓日成本信息
-    cost_info = cost_info.rename(columns={price_type: '{}_buy'.format(price_type)})
-    cost_info = cost_info.set_index('sec_id')
-    records = cost_info.copy()  # 存储持仓股票买卖价格
-    records['{}_sell'.format(price_type)] = np.nan
-    records['date_sell'] = np.nan
-    close_new = pd.DataFrame()
+    back_test_path = os.path.join(DB_PATH, r"backtest\{}\{}\{}".format(model_name, label_kind, benchmark))
+    file_path = os.path.join(back_test_path, "records_{}.json".format(yearmonth))
+    # yearmonth =
+    if not os.path.exists(back_test_path):
+        os.makedirs(back_test_path)
 
-    for date in trading_days[1:]:
-        now = close[close.date == date]
-        now = now.set_index('sec_id')
-        if date == date_close:
-            stocks_hold_to_maturity = records[records.close_sell.isnull()].index.tolist()
-            # 获取在强制平仓日仍持仓的股票列表
-            existed_sec_ids = now.index.tolist()
-            # 对于那些在强制平仓日停牌的持仓股票 暂时不处理 直接丢掉
-            stocks_hold_to_maturity = list(set(stocks_hold_to_maturity).intersection(existed_sec_ids))
-            sellstocks = now.loc[stocks_hold_to_maturity]
-            sellstocks = sellstocks.rename(columns={price_type: '{}_sell'.format(price_type)})
-            sellstocks['date_sell'] = date
-            records.update(sellstocks)
-            continue
+    if os.path.exists(file_path) and (not override):
+        return
+    records = {}
+    # 获取所有各月度的收益率和月初股价
+    df_rr_monthly = pd.read_csv(os.path.join(DB_PATH, r"datasets\pre\rr_monthly.csv"))
+    df_rr_monthly_1 = df_rr_monthly.set_index(['sec_id', 'yearmonth'])
+    df_rr_monthly_1 = df_rr_monthly_1.sort_index(level='sec_id')
+    perform = df_rr_monthly_1.loc[(selected_sec_ids, yearmonth), ['CLOSE', 'month_ret']]
+    model_ret = (perform['CLOSE'] * perform['month_ret']).sum() / perform['CLOSE'].sum()
+    benchmark_rr = df_rr_monthly[df_rr_monthly['sec_id'] == benchmark]
+    benchmark_rr = benchmark_rr.set_index(['yearmonth'])
+    benchmark_ret = benchmark_rr.loc[yearmonth, 'month_ret']
+    records[yearmonth] = {"model": model_ret, "benchmark": benchmark_ret, "selected_sec_ids": ",".join(selected_sec_ids)}
+    dk.dict2json(records, file_path)
+    # records[yearmonth] = {"return": (perform['CLOSE'] * perform['month_ret']).sum() / perform['CLOSE'].sum(), "selected_stocks": selected}
+    # for yearmonth in list(selected_sec_ids.keys()):
+    #     selected = selected_sec_ids[yearmonth]
+    #     # 获得入选股票在下个月的收益率
+    #     perform = benchmark_rr_monthly.loc[(selected, yearmonth), ['CLOSE', 'month_ret']]
+    # records[yearmonth] = {"return": (perform['CLOSE'] * perform['month_ret']).sum() / perform['CLOSE'].sum(), "selected_stocks": selected}
+
+    # df_records = pd.DataFrame([[i, v['return'], v['selected_stocks']] for i, v in records.items()], columns=['yearmonth', 'month_ret', 'selected_stocks'])
+    # df_records = df_records.rename(columns={'month_ret': 'model_ret'})
+    # 获取基准收益
+    # benchmark_rr = pd.read_csv(os.path.join(DB_PATH, r"datasets\return_rate\{}_index_rr_monthly.csv".format(benchmark)))
+    # benchmark_rr = benchmark_rr.set_index(['yearmonth'])
+    # benchmark_rr = benchmark_rr.rename(columns={'month_ret': 'benchmark_rr'})
+    # del benchmark_rr['CLOSE']
+    # del benchmark_rr['sec_id']
+    # benchmark_ret = benchmark_rr.loc[yearmonth, 'month_ret']
+    # records[yearmonth] = {"model": model_ret, "benchmark": benchmark_ret, "selected_sec_ids": ",".join(selected_sec_ids)}
+    # dk.dict2json(records, file_path)
+    # df_records = df_records.merge(benchmark_rr, how='left', on=['yearmonth'])
+    # df_records.to_csv(os.path.join(back_test_path, "df_records_{}".format(yearmonth))
+
+    # df_records_daily = df_records.copy()
+    # # 获取模型和基准累计净值
+    # for ix in df_records.index:
+    #     if ix == 0:
+    #         df_records.loc[ix, 'model_ret_cum'] = 1
+    #         df_records.loc[ix, 'benchmark_rr_cum'] = 1
+    #     else:
+    #         df_records.loc[ix, 'model_ret_cum'] = df_records.loc[ix - 1, 'model_ret_cum'] * (1 + df_records.loc[ix, 'model_ret'])
+    #         df_records.loc[ix, 'benchmark_rr_cum'] = df_records.loc[ix - 1, 'benchmark_rr_cum'] * (1 + df_records.loc[ix, 'benchmark_rr'])
+    # df_records = df_records[['yearmonth', 'benchmark_rr_cum', 'model_ret_cum']].set_index('yearmonth')
+    # df_records .to_csv(os.path.join(back_test_path, "df_records_{}.csv".format(dataID)))
+    # if plot:
+    #     fig, ax = plt.subplots()
+    #     fig.set_size_inches(20, 10)
+    #     ax.plot(df_records)
+    #     ax.legend(df_records.columns, fontsize=22)
+    #     plt.title("基于测试集{}选股累计收益与沪深300累计净值比较图 {}--{}".format(model_name, min(list(selected_sec_ids.keys())), max(list(selected_sec_ids.keys()))), fontsize=22)
+    #     plt.xlabel("日期", fontsize=22)
+    #     plt.ylabel("累计净值", fontsize=22)
+    #     plt.savefig(os.path.join(back_test_path, "LJJZ_{}.png".format(dataID)))
+
+    # 计算回测指标
+    # 年化收益率
+    # rr_annually = (df_records.iloc[-1, :] - df_records.iloc[0, :]) / df_records.iloc[0, :]
+
+    # 夏普比率
+    # risk_free_int = dk.json2dict(os.path.join(DB_PATH, r"datasets\pre\risk_free_int.json"))
+
+    # sharp_ratio = {}
+    # sharp_ratio['model'] = (rr_annually['model_ret_cum'] - risk_free_int[ID2DATE[str(dataID)]['TEST'][0][:4]]) / np.std(df_records_daily['model_ret'])
+    # sharp_ratio['benchmark'] = (rr_annually['benchmark_rr_cum'] - risk_free_int[ID2DATE[str(dataID)]['TEST'][0][:4]]) / np.std(df_records_daily['benchmark_rr'])
+
+    # 最大回撤
+    # max_back = {}
+    # col_names = df_records.columns.tolist()
+    # for i in range(df_records.shape[0]):
+    #     for j in range(df_records.shape[1]):
+    #         if i > 0:
+    #             back = np.max(df_records.iloc[:i, j]) / df_records.iloc[i, j] - 1
+    #             if back > 0:  # 当前净值小于历史最大值：
+    #                 if back > max_back[col_names[j]]:
+    #                     max_back[col_names[j]] = back
+    #         else:
+    #             max_back[col_names[j]] = 0
+
+    # alpha = df_records.iloc[-1, 1] - df_records.iloc[-1, 0]
+    # info_ratio = (df_records_daily['model_ret'] - df_records_daily['benchmark_rr']).mean() / (df_records_daily['model_ret'] - df_records_daily['benchmark_rr']).std()
+
+    # a1 = rr_annually.to_frame().T.rename(columns={"benchmark_rr_cum": "benchmark", "model_ret_cum": "model"})
+    # a1['index'] = "年化收益率"
+    # a2 = pd.DataFrame([[k, v] for k, v in max_back.items()]).set_index(0).T.rename(columns={"benchmark_rr_cum": "benchmark", "model_ret_cum": "model"})
+    # a2['index'] = "最大回撤率"
+    # # a3 = pd.DataFrame([[k, v] for k, v in sharp_ratio.items()]).set_index(0).T
+    # # a3['index'] = "夏普比率"
+    # df_metrics = a1.append(a2)
+    # df_metrics = df_metrics.append(pd.Series({'benchmark': 0, 'model': info_ratio, 'index': "信息比率"}), ignore_index=True)
+    # df_metrics = df_metrics.append(pd.Series({'benchmark': 0, 'model': alpha, 'index': "超额收益率"}), ignore_index=True)
+    # df_metrics['period'] = "{}--{}".format(min(list(selected_sec_ids.keys())), max(list(selected_sec_ids.keys())))
+    # df_metrics = df_metrics.reindex(columns=[['period', 'index', 'benchmark', 'model']])
+    # df_metrics.to_csv(os.path.join(back_test_path, "history_backtest_metrics_{}.csv".format(dataID)), index=0)
+    # print(df_metrics)
+
+
+def plot_LLJZ(yearmonth_st, yearmonth_end, model_name="XGBoost", label_kind="label_A", benchmark="hs300"):
+    file_root = os.path.join(DB_PATH, "backtest", model_name, label_kind, benchmark)
+    file_LJJZ = os.path.join(file_root, "LLJZ", "{}--{}".format(yearmonth_st, yearmonth_end))
+    if not os.path.exists(file_LJJZ):
+        os.makedirs(file_LJJZ)
+    year_st_num = int(yearmonth_st[:4])
+    year_end_num = int(yearmonth_end[:4])
+    diff = year_end_num - year_st_num
+    yearmonth_lst = [str(year_st_num + i) + '-{:0>2}'.format(str(1 + j)) for i in range(0, diff + 1) for j in range(0, 12)]
+    yearmonth_lst = [yearmonth for yearmonth in yearmonth_lst if (yearmonth >= yearmonth_st) & (yearmonth <= yearmonth_end)]
+    records = {}
+    for yearmonth in yearmonth_lst:
+        records.update(dk.json2dict(os.path.join(file_root, "records_{}.json".format(yearmonth))))
+    date_st = dk.date2char(dk.char2datetime(yearmonth_st + '-31') - dk.timedelta({'months': 1}))
+    records[date_st] = {'benchmark': 1, 'model': 1}
+    df_records = pd.DataFrame(records).T.reset_index().rename(columns={'index': 'yearmonth'})
+
+    df_records.to_csv(os.path.join(file_LJJZ, "df_records.csv"), index=0)
+
+    df_records_daily = df_records[['yearmonth', 'benchmark', 'model']]
+    # 获取模型和基准累计净值
+    for ix in df_records_daily.index:
+        if ix == 0:
+            df_records_daily.loc[ix, 'model_rr_cum'] = 1
+            df_records_daily.loc[ix, 'benchmark_rr_cum'] = 1
         else:
-            # 获取截至今日的浮动盈亏率
-            now = now.rename(columns={price_type: '{}_now'.format(price_type)})
-            del now['date']
-            close_all = cost_info.merge(now, how='left', left_index=True, right_index=True)
-            close_all['ret_rate'] = close_all['{}_now'.format(price_type)] / close_all['{}_buy'.format(price_type)] - 1
-            close_all = close_all.replace(np.nan, 0)
-            # 对于那些当日未取得股价的股票设置收益率为0 这样既不会被止损卖出也不会被止盈卖出
-            # 计算止损卖出的股票并存入records
-            sellstocks = close_all[close_all.ret_rate < stoploss]
-            if len(sellstocks) != 0:
-                if log:
-                    dk.Logger.info("以下股票由于亏损大于{}被强制卖出: {}".format(stoploss, sellstocks.index.tolist()))
-                sellstocks = sellstocks.rename(columns={'{}_now'.format(price_type): '{}_sell'.format(price_type)})
-                sellstocks['date_sell'] = date
-                del sellstocks['close_buy']
-                records.update(sellstocks)
-            # 计算止盈卖出的股票并存入records
-            sellstocks = close_all[close_all.ret_rate > stopprofit]
-            if len(sellstocks) != 0:
-                if log:
-                    dk.Logger.info("以下股票由于盈利大于{}被强制卖出: {}".format(stopprofit, sellstocks.index.tolist()))
-                sellstocks = sellstocks.rename(columns={'{}_now'.format(price_type): '{}_sell'.format(price_type)})
-                sellstocks['date_sell'] = date
-                del sellstocks['{}_buy'.format(price_type)]
-                records.update(sellstocks)
-            bools = (close_all.ret_rate >= stoploss) & (close_all.ret_rate <= stopprofit)
-            close_new = close_all[bools]
-            if len(close_new) == 0:  # 到期日前股票全部卖完
-                break
-            del close_new['{}_now'.format(price_type)]
-            del close_new['ret_rate']
-            cost_info = close_new.copy()
-    records = records.dropna()
-    records = records.rename(columns={'date': 'date_buy'})
-    ret_rate = records['{}_sell'.format(price_type)].sum() / records['{}_buy'.format(price_type)].sum() - 1
-    return ret_rate
-
-
-def back_test_on_given_model(start_date, end_date, cycle, windows, num, model, benchmark="000300.SH"):
-    """
-    根据给定的mfs模型在指定时间段内按指定换仓周期进行回测
-    @start_date <"%Y-%m-%d">: 回测开始日期
-    @end_date <"%Y-%m-%d">: 回测结束日期
-    @cycle <int>: 换仓周期
-    @windows <int>: 计算因子权重的滚动窗口 即根据近多少个交易日进行分组有效性检验
-    @num <int>: 持股个数
-    @model <function>: 选股模型函数 可选： mfs_by_score
-    @benchmark <str>: 基准 hs300
-    """
-
-    output = {}
-    trading_days = fk.get_trading_days(start_date, end_date)
-    start = start_date  # 初始建仓点
-    while (trading_days.index(start) + cycle) < len(trading_days):  # 当建仓后cycle个交易日后有值时执行
-        end = trading_days[trading_days.index(start) + cycle]
-        print('当前建仓日期', start, '当前强制平仓日期', end)
-        selected_stocks = model(date=start, windows_step1=windows, num1=num)
-        # 获取开始日期和结束日期的收盘价
-        model_return = calculate_period_return(start, end, selected_stocks)
-        bench_return = calculate_period_return(start, end, [benchmark])
-        output[start] = {"model_return": model_return, "hs_300_return": bench_return}
-        if trading_days.index(end) + 1 >= len(trading_days):
-            break
-        start = trading_days[trading_days.index(end) + 1]
-    df = pd.DataFrame(output).T
-    df1 = df.copy()
-    for i in range(df.shape[0]):
-        if i == 0:
-            df1.iloc[i, :] = 1
-        else:
-            df1.iloc[i, :] = df1.iloc[i - 1, :] + df.iloc[i, :]
-    return output
-
-
-def back_test_on_given_model_set_stop(start_date, end_date, cycle, windows, num, model, stoploss, stopprofit, benchmark="000300.SH"):
-    """
-    根据给定的mfs模型在指定时间段内按指定换仓周期进行回测 设置止盈止损点
-    @start_date <"%Y-%m-%d">: 回测开始日期
-    @end_date <"%Y-%m-%d">: 回测结束日期
-    @cycle <int>: 换仓周期
-    @windows <int>: 计算因子权重的滚动窗口 即根据近多少个交易日进行分组有效性检验
-    @num <int>: 持股个数
-    @model <function>: 选股模型函数 可选： mfs_by_score
-    @stoploss <float>: 止损率 如=-0.1 即当浮亏率达到10%时卖出
-    @stopprofit <float>: 止盈率 如=0.1 即当浮盈率达到10%时卖出
-    @benchmark <str>: 基准 hs300
-    """
-
-    output = {}
-    trading_days = fk.get_trading_days(start_date, end_date)
-    start = start_date  # 初始建仓点
-    while (trading_days.index(start) + cycle) < len(trading_days):  # 当建仓后cycle个交易日后有值时执行
-        end = trading_days[trading_days.index(start) + cycle]
-        print('当前建仓日期', start, '当前强制平仓日期', end)
-        selected_stocks = model(date=start, windows_step1=windows, num1=num)
-        # 获取开始日期和结束日期的收盘价
-        model_return = stop_loss_or_profit(sec_ids=selected_stocks, start_date=start, end_date=end,
-                                           stoploss=stoploss, stopprofit=stopprofit, price_type='close')
-        bench_return = calculate_period_return(start, end, [benchmark])
-        output[start] = {"model_return": model_return, "hs_300_return": bench_return}
-        if trading_days.index(end) + 1 >= len(trading_days):
-            break
-        start = trading_days[trading_days.index(end) + 1]
-    df = pd.DataFrame(output).T
-    df1 = df.copy()
-    for i in range(df.shape[0]):
-        if i == 0:
-            df1.iloc[i, :] = 1
-        else:
-            df1.iloc[i, :] = df1.iloc[i - 1, :] + df.iloc[i, :]
-    return output
+            df_records_daily.loc[ix, 'model_rr_cum'] = df_records_daily.loc[ix - 1, 'model_rr_cum'] * (1 + df_records_daily.loc[ix, 'model'])
+            df_records_daily.loc[ix, 'benchmark_rr_cum'] = df_records_daily.loc[ix - 1, 'benchmark_rr_cum'] * (1 + df_records_daily.loc[ix, 'benchmark'])
+    df_records_daily = df_records_daily[['yearmonth', 'benchmark_rr_cum', 'model_rr_cum']].set_index('yearmonth')
+    # df_records_daily .to_csv(os.path.join(back_test_path, "df_records_daily_{}.csv".format(dataID)))
+    fig, ax = plt.subplots()
+    fig.set_size_inches(20, 10)
+    ax.plot(df_records_daily)
+    ax.legend(df_records_daily.columns, fontsize=22)
+    plt.title("基于测试集{}选股累计收益与{}累计净值比较图 {}--{}".format(model_name, benchmark, yearmonth_st, yearmonth_end), fontsize=22)
+    plt.xlabel("日期", fontsize=22)
+    plt.ylabel("累计净值", fontsize=22)
+    plt.savefig(os.path.join(file_LJJZ, "LJJZ.png"))

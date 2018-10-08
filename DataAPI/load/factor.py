@@ -5,8 +5,8 @@ factor.py
 
 从本地数据库载入原始indicators 然后计算因子
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.08
 
 -------------------

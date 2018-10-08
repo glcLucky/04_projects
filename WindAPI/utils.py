@@ -5,7 +5,7 @@ utils.py
 
 工具函数
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.01.10
 """

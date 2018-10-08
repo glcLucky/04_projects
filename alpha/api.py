@@ -13,6 +13,8 @@ api.py
 from . import (
     strategies,
     backtest,
+    data,
 )
 from . strategies import *
 from . backtest import *
+from . data import *

@@ -5,7 +5,7 @@ api.py
 
 接口
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.01.10
 """

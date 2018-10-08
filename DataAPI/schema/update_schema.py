@@ -51,6 +51,10 @@ def update_schema(db_name, sub_name):
 
     Logger.info("schema updated: {}".format(sub_name))
     dict2json(schema, os.path.join(DB_PATH_LIB[db_name], 'schema'), log=False)
+    a = pd.DataFrame(schema).T
+    col_names = ['aspect', 'type', 'begin date', 'end date', 'last update', 'col_names', 'field', 'kwargs', 'explanation']
+    b = a.reindex(columns=col_names).reset_index().rename(columns={'index': 'indicator'}).sort_values(['type', 'aspect', 'field'])
+    b.to_csv(os.path.join(DB_PATH_LIB[db_name], 'schema.csv'), index=False)
 
 
 def update_factor_return_schema(factor):

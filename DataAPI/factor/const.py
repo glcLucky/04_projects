@@ -5,8 +5,8 @@ const.py
 
 配置计算因子所需的全局变量
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.08
 """
 

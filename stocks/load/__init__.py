@@ -5,7 +5,7 @@ load
 
 从数据源载入数据
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.12.11
 """

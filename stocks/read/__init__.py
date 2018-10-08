@@ -5,7 +5,7 @@ read
 
 读数据库相关函数
 
-@author: Wu Yudi
+@author: Jasper Gui
 @email: wuyd@swsresearch.com
 @date: 2017.12.11
 """

@@ -5,8 +5,8 @@ formula.py
 
 因子的计算公式，输出未经统计处理的因子值，形如 calculate_raw_<factor_name>
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.08
 """
 

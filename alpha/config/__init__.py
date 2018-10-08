@@ -8,6 +8,7 @@ config
 """
 
 from . preference import (
-    ROOT,
+    USER,
     PASSWORD,
+    DB_PATH,
 )

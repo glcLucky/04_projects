@@ -5,8 +5,8 @@ indicator.py
 
 下载指标原始数据
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2017.12.19
 
 -------------------

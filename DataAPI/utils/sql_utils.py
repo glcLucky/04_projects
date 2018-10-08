@@ -5,8 +5,8 @@ sql_utils.py
 
 sql数据库工具函数
 
-@author: Wu Yudi
-@email: jasper.wuyd@gmail.com
+@author: Jasper Gui
+@email: jasper.gui@outlook.com
 @date: 2018.03.13
 
 -------------------
